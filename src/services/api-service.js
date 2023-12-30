@@ -1,36 +1,40 @@
-import { PEOPLE_URL } from "../constants";
+import { FILMS_URL, PEOPLE_URL } from "../constants";
 
 export class APIService {
 
-    constructor(){
+    constructor() {
         this.peopleUrl = PEOPLE_URL;
+        this.filmsUrl = FILMS_URL;
     }
 
-    request = async(url,method = 'GET') => {
+    request = async (url, method = 'GET') => {
         let response;
         try {
-            response = await fetch(url,{method});
-            if(response.status !== 200){
+            response = await fetch(url, { method });
+            if (response.status !== 200) {
                 throw new Error('Some Error Occured');
             }
             response = await response.json();
-            return ({response,error:false});
+            return ({ response, error: false });
         }
-        catch(err){
+        catch (err) {
             return ({
-                error:err,
+                error: err,
                 response
             });
         }
     }
 
-    peoples = async(page = 1,searchKeyword) => {
-            console.log('i ran 2')
-            return await this.request(`${this.peopleUrl}?page=${page}&search=${searchKeyword}`);
+    peoples = async (page = 1, searchKeyword) => {
+        return await this.request(`${this.peopleUrl}?page=${page}&search=${searchKeyword}`);
     }
 
-    peopleDetails = async(id) => {
-        return await this.request(`${this.peopleUrl}id`);
+    peopleDetails = async (id) => {
+        return await this.request(`${this.peopleUrl}${id}`);
+    }
+
+    movieDetails = async (url) => {
+        return await this.request(url);
     }
 
 

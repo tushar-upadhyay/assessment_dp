@@ -44,6 +44,13 @@
   overflow: scroll;
 }
 
+.w-100{
+  width: 100%;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
 
 .card {
   background: #fff;
@@ -51,10 +58,49 @@
   display: inline-block;
   margin: 4px 4rem 4px 4rem;
   position: relative;
-  padding: 1rem;
+  padding: 8px;
   width: 50%;
 }
 
 .card:hover {
   box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+}
+
+.button {
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 12px;
+  
+ 
+}
+
+.add-button {
+  background-color: #04AA6D;
+}
+
+.remove-button {
+  background-color: #f44336;
+}
+
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 5px;
+  text-align: left;
+}
+
+input {
+  width: 100%;
+  padding: 12px 20px;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
 }

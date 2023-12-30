@@ -1,69 +1,78 @@
 import { useEffect, useState } from "react"
-import { usePromise } from "../hooks/useFetch"
+import { usePromise } from "../hooks/usePromise"
 import { apiService } from "../services/api-service"
 import { useDebounce } from "../hooks/useDebounce";
+import { Link } from "react-router-dom";
+import { Character } from "./characters-component";
 
-const sortByOptions = ['name','height','mass'];
+const sortByOptions = ['name', 'height', 'mass'];
 
-export const ListingComponent = ()=> {
+export const ListingComponent = () => {
 
-    const [page,setPage] = useState(1);
+    const [page, setPage] = useState(1);
 
-    const [sortedData,setSortedData] = useState();
+    const [sortedData, setSortedData] = useState();
 
-    const [sortBy,setSortBy] = useState(sortByOptions[0]);
-    
-    const [loading,data,error,update] = usePromise();
+    const [sortBy, setSortBy] = useState(sortByOptions[0]);
 
-    const [searchKeyword,setSearchKeyword] = useDebounce(null);
+    const [loading, data, error, update] = usePromise();
 
-    const callAPI = (page,searchKeyword) => {
-        const p = apiService.peoples(page,searchKeyword);
+    // using debounced search (will fire search api after 1 second of typing)
+    const [searchKeyword, setSearchKeyword] = useDebounce(null);
+
+    useEffect(() => {
+        loadCharacters(page, '')
+    }, []);
+
+    const loadCharacters = (page, searchKeyword) => {
+        searchKeyword = searchKeyword || '';
+        const p = apiService.peoples(page, searchKeyword);
         update(p);
+
     }
 
-    const handlePageChange = (event)=>{
+    const handlePageChange = (event) => {
         setPage(event.target.value);
-        callAPI(event.target.value,searchKeyword)
+        loadCharacters(event.target.value, searchKeyword);
     };
 
-
-    useEffect(()=>{
-        if(data && data.results){
-        handleSortBy(sortBy);
+    const handleSearch = (event) => {
+        setSearchKeyword(event.target.value);
+        if (event.target.value === '') {
+            setPage(1);
+            loadCharacters(1, '');
         }
-    },[data]);
+    }
 
-    useEffect(()=>{
-        callAPI(page,'')
-    },[])
 
-    const handleSortBy = (sortBy)=>{
+    useEffect(() => {
+        if (data && data.results) {
+            handleSortBy(sortBy);
+        }
+    }, [data]);
+
+    const handleSortBy = (sortBy) => {
         setSortBy(sortBy);
         const results = data.results;
-        if(sortBy === 'name'){
-            results.sort((a,b)=> a.name.localeCompare(b.name))
+        if (sortBy === 'name') {
+            results.sort((a, b) => a.name.localeCompare(b.name))
         }
-        else{
-        results.sort((a,b)=>a[sortBy] - b[sortBy]);
+        else {
+            results.sort((a, b) => a[sortBy] - b[sortBy]);
         }
         data.results = results;
         setSortedData(data)
     }
 
 
-    useEffect(()=>{
-        if(searchKeyword !== null && !!searchKeyword){
-            console.log('div')
-           setPage(1);
-           callAPI(1,searchKeyword);
+    useEffect(() => {
+        if (searchKeyword !== null && !!searchKeyword) {
+            setPage(1);
+            loadCharacters(1, searchKeyword);
         }
-    },[searchKeyword]);
+    }, [searchKeyword]);
 
-
-
-
-    if(error){
+    if (error) {
         return <div>{error}</div>
     }
 
@@ -71,39 +80,30 @@ export const ListingComponent = ()=> {
         <div className="h-100">
             {sortedData ? (
                 <div className="flex justify-content-center">
-                <div className="flex align-items-center justify-content-evenly" style={{gap:'8px'}}>
-                <input onChange={e=>setSearchKeyword(e.target.value)} placeholder="Search a character" />
-                <div className="flex align-items-center justify-content-center">
-                    Sort By: <select onChange={e=>handleSortBy(e.target.value)}>
-                        {sortByOptions.map((sortLabel,index)=><option value={sortLabel} key={index}>{sortLabel}</option>)}
-                    </select>
+                    <div className="flex align-items-center justify-content-evenly" style={{ gap: '8px', marginTop: 8 }}>
+                        <input className="w-100" onChange={handleSearch} placeholder="Search a character" />
+                        <div className="flex flex-direction-column align-items-center justify-content-center w-100">
+                            Sort By: <select onChange={e => handleSortBy(e.target.value)}>
+                                {sortByOptions.map((sortLabel, index) => <option value={sortLabel} key={index}>{sortLabel}</option>)}
+                            </select>
+                        </div>
+                        <div className="flex flex-direction-column align-items-center justify-content-center w-100">
+                            Go to page
+                            <select value={page} onChange={handlePageChange}>
+                                {new Array(Math.ceil(sortedData.count / 10)).fill(0).map((_, index) => index + 1).map((pageNumber) => {
+                                    return <option key={pageNumber} value={pageNumber}> {pageNumber} </option>
+                                })}
+                            </select>
+                        </div>
+
+                        <Link to={'/favourites'}>Favourites</Link>
+
+                    </div>
                 </div>
-            <div className="flex align-items-center justify-content-center">
-                <p>Go to page:</p>
-                <select value={page} onChange={handlePageChange}>
-                    {new Array(Math.ceil(sortedData.count/10)).fill(0).map((_,index)=>index+1).map((pageNumber)=>{
-                        return <option key={pageNumber} value={pageNumber}> {pageNumber} </option>
-                    })}
-                </select>
-            </div>
-            
-            </div>
-                </div>
-            ):null}
+            ) : null}
             {!loading ? (
-                            <div className="flex flex-direction-column justify-content-center align-items-center card-container">
-                            {data.results.map((d,index)=>{
-                                return (
-                                    <div className="card">
-                                    <p key={index}>{d.name}</p>
-                                    </div>
-                                    )
-                            })}
-                            </div>
-            ):<p>Loading...</p>}
-
-
-            
+                <Character data={data} />
+            ) : <p>Loading...</p>}
         </div>
     )
 
