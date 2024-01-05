@@ -17,6 +17,6 @@ export const useDebounce = (keyword, debounceTime = 1000) => {
     }, [data]);
 
 
-    return [debouncedData, setData];
+    return [debouncedData, setData,setDebouncedData];
 
 }

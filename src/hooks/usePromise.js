@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 
 export const usePromise = (promiseData) => {
     const [promise, setPromise] = useState(promiseData);

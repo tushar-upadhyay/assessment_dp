@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import { usePromise } from "../hooks/usePromise"
 import { apiService } from "../services/api-service"
 import { useDebounce } from "../hooks/useDebounce";
 import { Link } from "react-router-dom";
 import { Character } from "./characters-component";
+import { ApiContext, UserContext } from "../App";
+// import { apiContext } from "../App";
 
 const sortByOptions = ['name', 'height', 'mass'];
 
@@ -15,10 +17,17 @@ export const ListingComponent = () => {
 
     const [sortBy, setSortBy] = useState(sortByOptions[0]);
 
-    const [loading, data, error, update] = usePromise();
+
+
+    // const [loading, data, error, update] = usePromise();
+
+    const { data, update } = useContext(ApiContext);
+
+    const { clear } = useContext(UserContext);
+
 
     // using debounced search (will fire search api after 1 second of typing)
-    const [searchKeyword, setSearchKeyword] = useDebounce(null);
+    const [searchKeyword, setSearchKeyword, directSetKeyword] = useDebounce(null);
 
     useEffect(() => {
         loadCharacters(page, '')
@@ -26,42 +35,74 @@ export const ListingComponent = () => {
 
     const loadCharacters = (page, searchKeyword) => {
         searchKeyword = searchKeyword || '';
-        const p = apiService.peoples(page, searchKeyword);
-        update(p);
+        let key = page;
+        if (searchKeyword) {
+            key += searchKeyword;
+        }
+        key = key.toString()
+        if (!data[key]) {
+
+            apiService.peoples(page, searchKeyword).then(
+                res => update({ [key]: res.response })
+            );
+        }
+        // update(p);
 
     }
 
     const handlePageChange = (event) => {
+        setSortedData()
         setPage(event.target.value);
         loadCharacters(event.target.value, searchKeyword);
     };
 
     const handleSearch = (event) => {
-        setSearchKeyword(event.target.value);
+
         if (event.target.value === '') {
+            directSetKeyword('')
             setPage(1);
-            loadCharacters(1, '');
+            setTimeout(() => loadCharacters(1, ''), 100);
+        }
+        else {
+            setSearchKeyword(event.target.value);
         }
     }
 
 
+
     useEffect(() => {
-        if (data && data.results) {
+        let key = page;
+        if (searchKeyword) {
+            key += searchKeyword;
+        }
+        key = key.toString()
+        console.log(key, data)
+        if (data[key] && data[key].results) {
             handleSortBy(sortBy);
+        }
+        else {
+            setSortedData()
         }
     }, [data]);
 
     const handleSortBy = (sortBy) => {
+        let key = page;
+        if (searchKeyword) {
+            key += searchKeyword;
+        }
+        key = key.toString()
         setSortBy(sortBy);
-        const results = data.results;
+        const results = data[key].results;
         if (sortBy === 'name') {
             results.sort((a, b) => a.name.localeCompare(b.name))
         }
         else {
             results.sort((a, b) => a[sortBy] - b[sortBy]);
         }
-        data.results = results;
-        setSortedData(data)
+        data[key].results = results;
+        console.log(data[key].results)
+        console.log(data[key])
+        setSortedData(JSON.parse(JSON.stringify(data[key])))
     }
 
 
@@ -72,9 +113,9 @@ export const ListingComponent = () => {
         }
     }, [searchKeyword]);
 
-    if (error) {
-        return <div>{error}</div>
-    }
+    // if (error) {
+    //     return <div>{error}</div>
+    // }
 
     return (
         <div className="h-100">
@@ -97,12 +138,12 @@ export const ListingComponent = () => {
                         </div>
 
                         <Link to={'/favourites'}>Favourites</Link>
-
+                        <button onClick={() => clear(null)} className="button remove-button">Logout</button>
                     </div>
                 </div>
             ) : null}
-            {!loading ? (
-                <Character data={data} />
+            {sortedData ? (
+                <Character data={sortedData} />
             ) : <p>Loading...</p>}
         </div>
     )

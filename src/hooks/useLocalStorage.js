@@ -9,10 +9,15 @@ export const useLocalStorage = (key = 'favourites') => {
         _setData(data);
     },[]);
 
-    const setData = (newData, key='favourites')=> {
+    const setData = (newData)=> {
         localStorage.setItem(key,JSON.stringify({...data,...newData}));
         _setData(data => ({...data,...newData}));
     }
 
-    return [data,setData];
+    const clear =()=>{
+        localStorage.clear();
+        _setData();
+    }
+
+    return [data,setData,clear];
 }
